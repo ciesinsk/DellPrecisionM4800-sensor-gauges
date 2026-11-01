@@ -16,6 +16,7 @@ PANEL = '#202e40'
 TEXT = '#edf3fb'
 MUTED = '#a7b8cc'
 GREEN = '#52d6ad'
+UPDATE_INTERVAL = 1.0
 
 
 def frequencies():
@@ -115,7 +116,7 @@ class Gauge(tk.Canvas):
         self.value = None
         self.reading = None
         self.animation = None
-        self.duration = 0.45
+        self.duration = UPDATE_INTERVAL
         self.bind('<Configure>', lambda event: self.draw())
 
     def stop_animation(self):
@@ -145,10 +146,9 @@ class Gauge(tk.Canvas):
         progress = min(1.0, (time.monotonic() - self.started) / self.duration)
         if not self.winfo_viewable():
             progress = 1.0
-        # Smoothstep: sanftes Beschleunigen und Abbremsen ohne Überschwingen.
-        eased = progress * progress * (3 - 2 * progress)
-        self.value = self.start_value + (self.target_value - self.start_value) * eased
-        self.maximum = self.start_maximum + (self.target_maximum - self.start_maximum) * eased
+        # Gleichmäßige Bewegung über das gesamte Aktualisierungsintervall.
+        self.value = self.start_value + (self.target_value - self.start_value) * progress
+        self.maximum = self.start_maximum + (self.target_maximum - self.start_maximum) * progress
         if progress >= 1:
             self.value, self.maximum = self.target_value, self.target_maximum
         self.draw()
@@ -274,13 +274,16 @@ class Monitor(tk.Tk):
 
     def collect(self):
         while not self.stopping.is_set():
+            started = time.monotonic()
             try:
                 data = read_sensors()
                 fans, fan_maximum = fan_speeds(data)
                 self.mailbox.put((frequencies(), temperatures(data), fans, fan_maximum, None))
             except (OSError, ValueError) as error:
                 self.mailbox.put(({}, {}, {}, 5000, str(error)))
-            self.stopping.wait(1)
+            # Die Abfragedauer zählt zum Intervall; langsame Abfragen holen
+            # keine verpassten Aktualisierungen nach.
+            self.stopping.wait(max(0.0, UPDATE_INTERVAL - (time.monotonic() - started)))
 
     def poll(self):
         latest = None

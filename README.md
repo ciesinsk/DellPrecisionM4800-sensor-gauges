@@ -9,7 +9,7 @@ Linux Mint 22.3 mit Xfce auf einem Dell Precision M4800.
 - Übersicht: höchster gemeldeter CPU-Takt und wärmster CPU-Sensor.
 - Reiter für die Frequenz jeder logischen CPU, einzelne CPU-Temperaturen und Lüfter.
 - Lüfterdrehzahlen in U/min, einschließlich gültiger Werte von 0 U/min.
-- Sanfte Zeiger- und Bogenanimation über etwa 0,45 Sekunden.
+- Gleichmäßige Zeiger- und Bogenanimation über das gesamte Aktualisierungsintervall (eine Sekunde).
 - Sensorabfrage jede Sekunde im Hintergrund; verdeckte Instrumente werden nicht animiert.
 - Vergrößerbares Fenster und Bildlaufleisten bei vielen Instrumenten.
 
@@ -73,7 +73,9 @@ Nach Codeänderungen das Fenster schließen und neu starten.
   wurden `Processor Fan` und `Video Fan` erkannt. Fehlende Messwerte werden
   nicht als 0 U/min ausgegeben. Die Skala berücksichtigt gemeldete Maximalwerte.
 - Die Zahl zeigt immer den letzten Messwert. Zeiger und Bogen bewegen sich
-  interpoliert dorthin; Zwischenpositionen sind keine zusätzlichen Messungen.
+  innerhalb einer Sekunde gleichmäßig dorthin. Dadurch folgt die Zeigeranzeige
+  den Messwerten um bis zu ein Aktualisierungsintervall verzögert;
+  Zwischenpositionen sind keine zusätzlichen Messungen.
 
 ## Fehlersuche
 
@@ -114,4 +116,6 @@ reinen SSH-Sitzung ohne grafische Weiterleitung.
 liest die Daten; eine Queue übergibt sie an den Tk-Hauptthread. Pro Aktualisierung
 wird `sensors -j` einmal mit einem Timeout von zwei Sekunden aufgerufen.
 Die Animation verwendet Tk-Callbacks mit ungefähr 30 Bildern pro Sekunde und
-endet nach Erreichen des Zielwerts.
+interpoliert linear über das gemeinsame `UPDATE_INTERVAL` von einer Sekunde.
+Die Abfragedauer wird auf dieses Intervall angerechnet. Dauert eine Abfrage
+länger, verlängert sich der Abstand zwischen den Messwerten entsprechend.

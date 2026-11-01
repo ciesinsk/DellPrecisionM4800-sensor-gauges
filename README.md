@@ -50,8 +50,17 @@ Alternativ direkt mit dem Python-Interpreter der Umgebung:
 .venv/bin/python cpu_monitor.py
 ```
 
-Wenn bereits eine Umgebung unter `~/src/cpu-monitor-venv` existiert, kann sie ohne
-weitere venv verwendet werden:
+Eine aktivierte virtuelle Umgebung wird automatisch verwendet, auch beim Start
+über einen symbolischen Link auf `start.sh`:
+
+```bash
+source ~/src/cpu-monitor-venv/bin/activate
+~/src/git-repos/DellPrecisionM4800-sensor-gauges/start.sh
+```
+
+Die Auswahl erfolgt in dieser Reihenfolge: `CPU_MONITOR_PYTHON`, aktivierte
+Umgebung (`VIRTUAL_ENV`), `.venv` im Repository.
+Eine vorhandene Umgebung kann auch ohne Aktivierung explizit gewählt werden:
 
 ```bash
 CPU_MONITOR_PYTHON="$HOME/src/cpu-monitor-venv/bin/python" ./start.sh
